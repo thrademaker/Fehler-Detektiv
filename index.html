@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Pferde-Detektiv</title>
+    <title>Fehler-Detektiv</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fdf5e6; padding: 40px; }
         .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 700px; margin: auto; }
@@ -50,60 +50,44 @@
     </div>
 </div>
 
-<script>
-    const fehlerDatenbank = {
-        "Pferd": "ferd", "Pferde": "ferde", "Mähne": "Mäne", "reiten": "reitn", 
-        "galoppieren": "galopieren", "Koppel": "Kopel", "Sattel": "Satel", 
-        "Fohlen": "Folen", "Hufe": "Hufe", "Stall": "Stal", "Wiese": "Wise"
-    };
+    <script>
+    // Diesen Datensatz würden wir von Gemini bekommen
+    let aktuellesRaetsel = []; 
 
-    function spielStarten() {
-        const rohText = document.getElementById('inputText').value;
-        const woerter = rohText.split(/\s+/);
+    function ladeKIStruktur(jsonVonGemini) {
+        const daten = JSON.parse(jsonVonGemini);
         const display = document.getElementById('textDisplay');
         display.innerHTML = "";
-        let fehlerZaehler = 0;
+        let fehlerGesamt = 0;
 
-        woerter.forEach(wort => {
-            let nurWort = wort.replace(/[.,!?;]/g, "");
-            let satzzeichen = wort.replace(/[a-zA-ZäöüÄÖÜß]/g, "");
-            
+        daten.display_words.forEach(obj => {
             const span = document.createElement('span');
             span.className = "word";
-            
-            // Logik: Ist das Wort in unserer Fehlerliste?
-            if (fehlerDatenbank[nurWort]) {
-                span.innerText = fehlerDatenbank[nurWort] + satzzeichen + " ";
-                span.dataset.correct = nurWort + satzzeichen;
+            span.innerText = obj.w + " ";
+
+            if (obj.correct === false) {
+                fehlerGesamt++;
                 span.onclick = function() {
                     if (!this.classList.contains('is-correct')) {
-                        this.innerText = this.dataset.correct + " ";
+                        this.innerText = obj.solution + " ";
                         this.classList.add('is-correct');
-                        updateScore();
+                        checkWin(fehlerGesamt);
                     }
                 };
-                fehlerZaehler++;
-            } else {
-                span.innerText = wort + " ";
-                // Optional: Klick auf richtiges Wort gibt kurzes "Schade"-Signal? 
-                // Aktuell passiert einfach nichts.
             }
             display.appendChild(span);
         });
-
-        document.getElementById('total').innerText = fehlerZaehler;
-        document.getElementById('adminArea').style.display = 'none';
-        document.getElementById('gameArea').style.display = 'block';
+        document.getElementById('total').innerText = fehlerGesamt;
     }
 
     let gefundene = 0;
-    function updateScore() {
+    function checkWin(total) {
         gefundene++;
         document.getElementById('found').innerText = gefundene;
-        if (gefundene == document.getElementById('total').innerText) {
-            alert("Klasse! Du hast alle Fehler entdeckt! 🌟");
-        }
+        if (gefundene === total) alert("KI-Rätsel gelöst! Super!");
     }
 </script>
+
 </body>
+
 </html>

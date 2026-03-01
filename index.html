@@ -2,93 +2,71 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Fehler-Detektiv</title>
+    <title>Pferde-Detektiv KI</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fdf5e6; padding: 40px; }
-        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 700px; margin: auto; }
-        h1 { color: #8b4513; text-align: center; }
-        
-        /* Der Textbereich */
-        .story-box { line-height: 2; font-size: 1.3em; padding: 20px; border: 1px solid #eee; border-radius: 10px; }
-        
-        /* WICHTIG: Alle Wörter sehen exakt gleich aus */
-        .word { 
-            cursor: default; /* Verhindert das "Hand"-Symbol beim Drüberfahren */
-            padding: 0 2px;
-            color: #333;
-            font-weight: normal; 
-            text-decoration: none;
-        }
-
-        /* Erst wenn es korrigiert wurde, wird es grün */
-        .is-correct { 
-            color: #228b22 !important; 
-            font-weight: bold !important; 
-            transition: color 0.3s ease;
-        }
-
-        .admin-area { margin-bottom: 20px; text-align: center; }
-        textarea { width: 100%; height: 80px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ccc; padding: 10px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #fdf5e6; padding: 20px; }
+        .container { background: white; padding: 30px; border-radius: 15px; max-width: 700px; margin: auto; border: 2px solid #deb887; }
+        .word { cursor: default; padding: 0 2px; font-size: 1.3em; line-height: 2; }
+        .is-correct { color: #228b22 !important; font-weight: bold; background: #d8f3dc; border-radius: 4px; }
+        textarea { width: 100%; height: 100px; margin-bottom: 10px; }
         button { background: #8b4513; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🦄 Klaras Fehler-Detektiv</h1>
+    <h1>🐴 Pferde-Detektiv (KI Edition)</h1>
 
-    <div class="admin-area" id="adminArea">
-        <textarea id="inputText" placeholder="Kopiere hier einen Text über Pferde hinein..."></textarea><br>
-        <button onclick="spielStarten()">Rätsel starten</button>
+    <div id="setup">
+        <p>1. Text in Gemini einfügen & JSON kopieren.<br>
+           2. JSON hier einfügen:</p>
+        <textarea id="jsonInput" placeholder='Füge hier das {"display_words": ...} von Gemini ein'></textarea><br>
+        <button onclick="starteKIReatsel()">Spiel laden</button>
     </div>
 
-    <div id="gameArea" style="display:none;">
-        <div class="story-box" id="textDisplay"></div>
-        <p style="text-align: center; margin-top: 20px;">
-            Gefundene Fehler: <span id="found">0</span> / <span id="total">0</span>
-        </p>
+    <div id="game" class="hidden">
+        <div id="textDisplay"></div>
+        <p>Gefundene Fehler: <span id="found">0</span> / <span id="total">0</span></p>
+        <button onclick="location.reload()">Neues Rätsel</button>
     </div>
 </div>
 
-    <script>
-    // Diesen Datensatz würden wir von Gemini bekommen
-    let aktuellesRaetsel = []; 
+<script>
+    function starteKIReatsel() {
+        try {
+            const data = JSON.parse(document.getElementById('jsonInput').value);
+            const display = document.getElementById('textDisplay');
+            let fehlerGesamt = 0;
+            let gefunden = 0;
 
-    function ladeKIStruktur(jsonVonGemini) {
-        const daten = JSON.parse(jsonVonGemini);
-        const display = document.getElementById('textDisplay');
-        display.innerHTML = "";
-        let fehlerGesamt = 0;
+            data.display_words.forEach(obj => {
+                const span = document.createElement('span');
+                span.className = "word";
+                span.innerText = obj.w + " ";
 
-        daten.display_words.forEach(obj => {
-            const span = document.createElement('span');
-            span.className = "word";
-            span.innerText = obj.w + " ";
+                if (obj.correct === false) {
+                    fehlerGesamt++;
+                    span.onclick = function() {
+                        if (!this.classList.contains('is-correct')) {
+                            this.innerText = obj.solution + " ";
+                            this.classList.add('is-correct');
+                            gefunden++;
+                            document.getElementById('found').innerText = gefunden;
+                            if(gefunden === fehlerGesamt) alert("Wahnsinn! Alles korrigiert! 🌟");
+                        }
+                    };
+                }
+                display.appendChild(span);
+            });
 
-            if (obj.correct === false) {
-                fehlerGesamt++;
-                span.onclick = function() {
-                    if (!this.classList.contains('is-correct')) {
-                        this.innerText = obj.solution + " ";
-                        this.classList.add('is-correct');
-                        checkWin(fehlerGesamt);
-                    }
-                };
-            }
-            display.appendChild(span);
-        });
-        document.getElementById('total').innerText = fehlerGesamt;
-    }
-
-    let gefundene = 0;
-    function checkWin(total) {
-        gefundene++;
-        document.getElementById('found').innerText = gefundene;
-        if (gefundene === total) alert("KI-Rätsel gelöst! Super!");
+            document.getElementById('total').innerText = fehlerGesamt;
+            document.getElementById('setup').classList.add('hidden');
+            document.getElementById('game').classList.remove('hidden');
+        } catch (e) {
+            alert("Das war kein gültiger KI-Code. Bitte kopiere das komplette JSON von Gemini.");
+        }
     }
 </script>
-
 </body>
-
 </html>
-

@@ -4,20 +4,35 @@
     <meta charset="UTF-8">
     <title>Klaras Fehler-Detektiv</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fdf5e6; padding: 20px; color: #4a2c2a; }
-        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); max-width: 800px; margin: auto; border: 4px solid #deb887; }
-        h1 { color: #8b4513; text-align: center; font-size: 2.2em; }
+        :root {
+            --primary-pink: #ff85a1;
+            --soft-pink: #fce4ec;
+            --accent-purple: #9b59b6;
+            --correct-green: #2ecc71;
+            --error-red: #e74c3c;
+            --bg-color: #fff0f3;
+        }
+
+        body { font-family: 'Segoe UI', cursive, sans-serif; background-color: var(--bg-color); padding: 20px; color: #4a4a4a; }
+        .container { background: white; padding: 40px; border-radius: 30px; box-shadow: 0 10px 25px rgba(255, 133, 161, 0.2); max-width: 800px; margin: auto; border: 3px solid var(--primary-pink); }
         
-        /* Das Spielfeld */
-        .story-box { line-height: 2.5; font-size: 1.4em; padding: 25px; background: #fff; border-radius: 15px; border: 1px solid #eee; margin-bottom: 20px; }
+        h1 { color: var(--primary-pink); text-align: center; font-size: 2.5em; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); margin-bottom: 30px; }
         
-        .word { cursor: default; padding: 2px 4px; border-radius: 5px; transition: 0.2s; }
+        /* Prompt-Box zum Kopieren */
+        .prompt-box { background: #f8f9fa; border: 1px solid #ddd; padding: 15px; border-radius: 12px; margin-bottom: 25px; font-size: 0.9em; }
+        .prompt-text { color: #666; font-style: italic; display: block; margin-bottom: 10px; }
+        code { background: #eee; padding: 5px; border-radius: 5px; display: block; white-space: pre-wrap; word-break: break-all; }
+
+        /* Spielfeld */
+        .story-box { line-height: 2.5; font-size: 1.4em; padding: 25px; background: #fff; border-radius: 20px; border: 2px solid var(--soft-pink); margin-bottom: 20px; min-height: 100px; }
+        .word { cursor: pointer; padding: 2px 5px; border-radius: 8px; transition: 0.2s; }
         
-        /* Richtig korrigiert */
-        .is-correct { color: #2d6a4f !important; font-weight: bold; background: #d8f3dc; }
+        /* Korrektur-Effekt */
+        .is-correct { color: white !important; font-weight: bold; background: var(--correct-green); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        /* Fehlklick-Animation */
-        .wrong-click { animation: shake 0.4s; background-color: #ffdce0; }
+        /* Fehler-Effekt (Rote Hervorhebung) */
+        .wrong-click { background-color: var(--error-red) !important; color: white !important; animation: shake 0.4s; }
+        
         @keyframes shake {
             0% { transform: translateX(0); }
             25% { transform: translateX(-5px); }
@@ -26,94 +41,36 @@
             100% { transform: translateX(0); }
         }
 
-        /* Anzeigen */
-        .stats-bar { display: flex; justify-content: space-around; font-size: 1.2em; font-weight: bold; margin-top: 20px; padding: 10px; background: #fff8f0; border-radius: 10px; }
-        .error-count { color: #b22222; }
-        .success-count { color: #2d6a4f; }
+        /* Statusleiste */
+        .stats-bar { display: flex; justify-content: space-around; font-size: 1.3em; font-weight: bold; margin-top: 25px; padding: 15px; background: var(--soft-pink); border-radius: 15px; color: #d81b60; }
 
-        /* Setup-Bereich */
-        textarea { width: 100%; height: 100px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; }
-        button { background: #8b4513; color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        /* UI Elemente */
+        textarea { width: 100%; height: 120px; border-radius: 15px; border: 2px solid var(--soft-pink); padding: 15px; box-sizing: border-box; font-family: sans-serif; margin-bottom: 15px; outline: none; }
+        textarea:focus { border-color: var(--primary-pink); }
+        button { background: var(--primary-pink); color: white; border: none; padding: 15px 30px; border-radius: 50px; cursor: pointer; font-weight: bold; font-size: 1.1em; transition: transform 0.2s, background 0.2s; box-shadow: 0 4px 10px rgba(255, 133, 161, 0.3); }
+        button:hover { background: #ff5c8d; transform: scale(1.05); }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🔍 Klaras Fehler-Detektiv</h1>
+    <h1>✨ Klaras Fehler-Detektiv ✨</h1>
 
     <div id="setup">
-        <p>Füge hier das JSON-Rätsel von Gemini ein:</p>
-        <textarea id="jsonInput" placeholder='{"display_words": [...] }'></textarea><br>
-        <button onclick="starteSpiel()">Rätsel laden 🚀</button>
+        <div class="prompt-box">
+            <span class="prompt-text">Kopiere diese Anweisung für Gemini (AI Studio):</span>
+            <code id="promptCode">Handle als Experte für den bayerischen Lehrplan (4. Klasse). Erstelle aus meinem Text ein JSON-Rätsel. Baue 5-8 typische Fehler ein (Dehnung, Doppelkonsonanten, Groß/Kleinschreibung). Gib NUR das JSON zurück: {"display_words": [{"w": "Wort", "correct": true, "solution": "Wort"}]}</code>
+        </div>
+        
+        <p>Füge hier das fertige JSON von Gemini ein:</p>
+        <textarea id="jsonInput" placeholder='Hier den Code mit { "display_words": ... } einfügen'></textarea><br>
+        <button onclick="starteSpiel()">Spiel zaubern 🪄</button>
     </div>
 
     <div id="game" class="hidden">
         <div class="story-box" id="textDisplay"></div>
         
         <div class="stats-bar">
-            <div class="success-count">Gefundene Fehler: <span id="found">0</span> / <span id="total">0</span></div>
-            <div class="error-count">Fehlversuche: <span id="misses">0</span></div>
-        </div>
-        
-        <div style="text-align:center; margin-top: 20px;">
-            <button onclick="location.reload()" style="background: #666;">Neues Rätsel erstellen</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    let gefunden = 0;
-    let fehlversuche = 0;
-    let fehlerGesamt = 0;
-
-    function starteSpiel() {
-        try {
-            const input = document.getElementById('jsonInput').value;
-            const data = JSON.parse(input);
-            const display = document.getElementById('textDisplay');
-            display.innerHTML = "";
-            
-            gefunden = 0;
-            fehlversuche = 0;
-            fehlerGesamt = data.display_words.filter(w => w.correct === false).length;
-
-            data.display_words.forEach(obj => {
-                const span = document.createElement('span');
-                span.className = "word";
-                span.innerText = obj.w + " ";
-
-                span.onclick = function() {
-                    // Falls das Wort ein Fehler war und noch nicht korrigiert wurde
-                    if (obj.correct === false && !this.classList.contains('is-correct')) {
-                        this.innerText = obj.solution + " ";
-                        this.classList.add('is-correct');
-                        gefunden++;
-                        document.getElementById('found').innerText = gefunden;
-                        if(gefunden === fehlerGesamt) {
-                            setTimeout(() => alert("Klasse gemacht, Klara! Du hast alle " + fehlerGesamt + " Fehler gefunden! 🏆"), 200);
-                        }
-                    } 
-                    // Falls auf ein bereits korrektes Wort geklickt wurde
-                    else if (obj.correct === true && !this.classList.contains('is-correct')) {
-                        fehlversuche++;
-                        document.getElementById('misses').innerText = fehlversuche;
-                        this.classList.add('wrong-click');
-                        setTimeout(() => this.classList.remove('wrong-click'), 400);
-                    }
-                };
-                display.appendChild(span);
-            });
-
-            document.getElementById('total').innerText = fehlerGesamt;
-            document.getElementById('setup').classList.add('hidden');
-            document.getElementById('game').classList.remove('hidden');
-        } catch (e) {
-            alert("Hoppla! Das JSON scheint nicht ganz korrekt zu sein. Bitte kopiere den Code nochmal aus Gemini.");
-        }
-    }
-</script>
-
-</body>
-</html>
+            <div>🌟 Gefunden: <span id="found">0</span> / <span
 

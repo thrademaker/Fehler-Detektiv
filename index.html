@@ -5,20 +5,20 @@
     <title>Klaras Fehler-Detektiv</title>
     <style>
         :root { --p: #ff85a1; --s: #fce4ec; --red: #e74c3c; --green: #2ecc71; }
-        body { font-family: 'Segoe UI', sans-serif; background: #fff0f3; padding: 20px; text-align: center; }
-        .container { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); max-width: 750px; margin: auto; border: 3px solid var(--p); }
-        h1 { color: var(--p); }
-        .prompt-box { background: #fafafa; border: 1px dashed #ccc; padding: 15px; border-radius: 12px; text-align: left; font-size: 0.85em; margin-bottom: 20px; }
-        code { display: block; background: #eee; padding: 10px; margin-top: 10px; word-break: break-all; border-radius: 5px; color: #555; cursor: all-scroll; }
-        .story-box { line-height: 2.8; font-size: 1.4em; padding: 25px; background: #fff; border: 2px solid var(--s); border-radius: 20px; text-align: left; margin-bottom: 20px; min-height: 50px; }
-        .word { cursor: pointer; padding: 2px 5px; display: inline-block; border-radius: 6px; transition: 0.2s; border-bottom: 1px solid transparent; }
-        .word:hover { border-bottom: 1px solid var(--p); }
-        .is-correct { background-color: var(--green) !important; color: white !important; font-weight: bold; }
+        body { font-family: 'Comic Sans MS', 'Segoe UI', sans-serif; background: #fff0f3; padding: 20px; text-align: center; }
+        .container { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(255, 133, 161, 0.2); max-width: 800px; margin: auto; border: 3px solid var(--p); }
+        h1 { color: var(--p); font-size: 2.2em; margin-bottom: 10px; }
+        .prompt-box { background: #fafafa; border: 1px dashed #ccc; padding: 15px; border-radius: 12px; text-align: left; font-size: 0.9em; margin-bottom: 20px; line-height: 1.4; }
+        code { display: block; background: #eee; padding: 10px; margin-top: 10px; word-break: break-all; border-radius: 5px; color: #444; font-family: monospace; }
+        .story-box { line-height: 2.8; font-size: 1.4em; padding: 25px; background: #fff; border: 2px solid var(--s); border-radius: 20px; text-align: left; margin-bottom: 20px; }
+        .word { cursor: pointer; padding: 3px 6px; display: inline-block; border-radius: 8px; transition: 0.2s; }
+        .is-correct { background-color: var(--green) !important; color: white !important; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .wrong-click { background-color: var(--red) !important; color: white !important; animation: shake 0.3s; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
-        .stats { display: flex; justify-content: space-around; background: var(--s); padding: 15px; border-radius: 15px; font-weight: bold; color: #d81b60; margin-top: 20px; }
-        textarea { width: 100%; height: 120px; border-radius: 10px; border: 2px solid var(--s); padding: 10px; box-sizing: border-box; font-family: monospace; }
-        button { background: var(--p); color: white; border: none; padding: 15px 30px; border-radius: 30px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 1.1em; }
+        .stats { display: flex; justify-content: space-around; background: var(--s); padding: 15px; border-radius: 15px; font-weight: bold; color: #d81b60; margin-top: 20px; font-size: 1.2em; }
+        textarea { width: 100%; height: 120px; border-radius: 10px; border: 2px solid var(--s); padding: 10px; box-sizing: border-box; font-family: monospace; font-size: 0.9em; }
+        button { background: var(--p); color: white; border: none; padding: 15px 30px; border-radius: 30px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 1.2em; transition: 0.2s; }
+        button:hover { background: #ff5c8d; transform: translateY(-2px); }
         .hidden { display: none; }
     </style>
 </head>
@@ -29,90 +29,5 @@
 
     <div id="setup">
         <div class="prompt-box">
-            <strong>1. Kopiere diesen Text für Gemini:</strong>
-            <code>Handle als bayerischer Grundschullehrer (4. Klasse). Erstelle ein anspruchsvolles JSON-Rätsel. Fokus: Nominalisierungen, Dehnung (h), ck/tz, das/dass, Auslautverhärtung. Baue 6-10 Fehler ein. Antworte NUR mit dem JSON-Objekt: {"display_words": [{"w": "Wort", "correct": true, "solution": "Wort"}]}</code>
-        </div>
-        <p><strong>2. Füge die Antwort hier ein:</strong></p>
-        <textarea id="jsonInput" placeholder="Hier das Ergebnis von Gemini einfügen..."></textarea><br>
-        <button id="startBtn">Rätsel zaubern 🪄</button>
-    </div>
-
-    <div id="game" class="hidden">
-        <div class="story-box" id="textDisplay"></div>
-        <div class="stats">
-            <span>🌟 Gefunden: <span id="found">0</span> / <span id="total">0</span></span>
-            <span>❌ Fehlklicks: <span id="misses">0</span></span>
-        </div>
-        <button onclick="location.reload()" style="background:#999; margin-top:20px;">Anderer Text</button>
-    </div>
-</div>
-
-<script>
-    document.getElementById('startBtn').addEventListener('click', function() {
-        let input = document.getElementById('jsonInput').value;
-        
-        // 1. Automatische Reparatur von typischen KI-Textfehlern
-        input = input.replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"'); // Ersetzt schräge Anführungszeichen
-        
-        const start = input.indexOf('{');
-        const end = input.lastIndexOf('}');
-        
-        if (start === -1 || end === -1) {
-            alert("Kein Code gefunden! Bitte kopiere die ganze Nachricht von Gemini.");
-            return;
-        }
-        
-        const jsonStr = input.substring(start, end + 1);
-
-        try {
-            const data = JSON.parse(jsonStr);
-            if (!data.display_words) throw new Error("Das JSON enthält keine 'display_words'.");
-
-            const container = document.getElementById('textDisplay');
-            container.innerHTML = "";
-            
-            let foundCount = 0;
-            let missCount = 0;
-            const totalErrors = data.display_words.filter(w => w.correct === false).length;
-            document.getElementById('total').innerText = totalErrors;
-
-            data.display_words.forEach(item => {
-                const span = document.createElement('span');
-                span.innerText = item.w + " ";
-                span.className = "word";
-
-                span.onclick = function() {
-                    // Logik für falsche Wörter
-                    if (item.correct === false) {
-                        if (!this.classList.contains('is-correct')) {
-                            this.innerText = item.solution + " ";
-                            this.classList.add('is-correct');
-                            this.classList.remove('wrong-click');
-                            foundCount++;
-                            document.getElementById('found').innerText = foundCount;
-                            if (foundCount === totalErrors) setTimeout(() => alert("Wahnsinn, Klara! Alles korrigiert! 👑"), 200);
-                        }
-                    } 
-                    // Logik für Fehlklicks auf bereits korrekte Wörter
-                    else {
-                        if (!this.classList.contains('is-correct') && !this.classList.contains('wrong-click')) {
-                            missCount++;
-                            document.getElementById('misses').innerText = missCount;
-                            this.classList.add('wrong-click');
-                        }
-                    }
-                };
-                container.appendChild(span);
-            });
-
-            document.getElementById('setup').classList.add('hidden');
-            document.getElementById('game').classList.remove('hidden');
-
-        } catch (e) {
-            alert("Fehler im JSON-Code: " + e.message + "\n\nStelle sicher, dass du alles von { bis } kopiert hast.");
-        }
-    });
-</script>
-
-</body>
-</html>
+            <strong>1. Kopiere diesen bayerischen Lehrer-Prompt:</strong>
+            <code>Handle als bayerischer Grundschullehrer (4. Klasse). Erstelle ein Rechtschreib-Rätsel. Baue 7-10 Fehler ein: Nominalisierungen (nach beim/zum), das/dass, Dehnungs-h, ck/tz, f/v, und Auslautverhärtung (d

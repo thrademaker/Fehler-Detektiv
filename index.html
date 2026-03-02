@@ -4,16 +4,19 @@
     <meta charset="UTF-8">
     <title>Klaras Fehler-Detektiv</title>
     <style>
-        body { font-family: sans-serif; background-color: #fff0f3; padding: 20px; text-align: center; }
-        .container { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); max-width: 600px; margin: auto; border: 3px solid #ff85a1; }
-        h1 { color: #ff85a1; }
-        textarea { width: 90%; height: 100px; margin-top: 10px; border-radius: 10px; border: 2px solid #fce4ec; padding: 10px; }
-        .word { cursor: pointer; padding: 2px 5px; display: inline-block; font-size: 1.2em; line-height: 2; border-radius: 5px; }
+        :root { --p: #ff85a1; --s: #fce4ec; }
+        body { font-family: sans-serif; background: #fff0f3; padding: 20px; text-align: center; color: #444; }
+        .container { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); max-width: 650px; margin: auto; border: 3px solid var(--p); }
+        h1 { color: var(--p); margin-bottom: 10px; }
+        .prompt-box { background: #fafafa; border: 1px dashed #ccc; padding: 10px; border-radius: 10px; font-size: 0.8em; margin-bottom: 20px; text-align: left; }
+        textarea { width: 100%; height: 120px; border-radius: 10px; border: 2px solid var(--s); padding: 10px; box-sizing: border-box; }
+        .word { cursor: pointer; padding: 2px 4px; display: inline-block; font-size: 1.3em; line-height: 2.2; border-radius: 5px; transition: 0.2s; }
         .is-correct { background-color: #2ecc71 !important; color: white !important; font-weight: bold; }
-        .wrong-click { background-color: #e74c3c !important; color: white !important; }
+        .wrong-click { background-color: #e74c3c !important; color: white !important; animation: shake 0.3s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+        .stats { margin-top: 20px; font-size: 1.2em; font-weight: bold; color: #d81b60; display: flex; justify-content: space-around; background: var(--s); padding: 15px; border-radius: 15px; }
+        button { background: var(--p); color: white; border: none; padding: 15px 30px; border-radius: 30px; cursor: pointer; font-weight: bold; margin-top: 15px; width: 100%; font-size: 1.1em; }
         .hidden { display: none; }
-        .stats { margin-top: 20px; font-weight: bold; color: #d81b60; }
-        button { background: #ff85a1; color: white; border: none; padding: 15px 30px; border-radius: 30px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -22,43 +25,48 @@
     <h1>✨ Klaras Fehler-Detektiv ✨</h1>
 
     <div id="setup">
-        <p>JSON hier einfügen:</p>
-        <textarea id="jsonInput" placeholder='{ "display_words": [...] }'></textarea><br>
-        <button id="startBtn">Spiel starten 🪄</button>
+        <div class="prompt-box">
+            <strong>Kopiere das für Gemini:</strong><br>
+            <code>Erstelle ein JSON-Rätsel aus meinem Text (Lehrplan Bayern 4. Klasse). Baue 5-8 Fehler ein. Antworte NUR mit dem JSON-Objekt: {"display_words": [{"w": "Wort", "correct": true, "solution": "Wort"}]}</code>
+        </div>
+        <textarea id="jsonInput" placeholder="Kopiere die gesamte Antwort von Gemini hier hinein..."></textarea>
+        <button id="startBtn">Spiel zaubern 🪄</button>
     </div>
 
     <div id="game" class="hidden">
-        <div id="textDisplay" style="text-align: left; padding: 20px; background: #fff; border: 1px solid #eee; border-radius: 10px;"></div>
+        <div id="textDisplay" style="text-align: left; padding: 10px;"></div>
         <div class="stats">
-            🌟 Gefunden: <span id="found">0</span> / <span id="total">0</span> | 
-            ❌ Fehler: <span id="misses">0</span>
+            <span>🌟 Gefunden: <span id="found">0</span> / <span id="total">0</span></span>
+            <span>❌ Fehler: <span id="misses">0</span></span>
         </div>
-        <button onclick="location.reload()">Neuer Text</button>
+        <button onclick="location.reload()" style="background:#999;">Anderer Text</button>
     </div>
 </div>
 
 <script>
-    // Wir nutzen eine sicherere Methode, um den Klick abzufangen
     document.getElementById('startBtn').addEventListener('click', function() {
-        let raw = document.getElementById('jsonInput').value;
+        let input = document.getElementById('jsonInput').value;
         
-        // 1. Bereinigung
-        let clean = raw.replace(/```json/g, "").replace(/```/g, "").trim();
+        // DER TRICK: Wir suchen den Text zwischen der ersten { und der letzten }
+        const start = input.indexOf('{');
+        const end = input.lastIndexOf('}');
         
-        if (!clean) {
-            alert("Bitte zuerst etwas in das Textfeld einfügen!");
+        if (start === -1 || end === -1) {
+            alert("Kein gültiger Code gefunden. Hast du die Antwort von Gemini kopiert?");
             return;
         }
+        
+        const jsonString = input.substring(start, end + 1);
 
         try {
-            const data = JSON.parse(clean);
+            const data = JSON.parse(jsonString);
             const container = document.getElementById('textDisplay');
             container.innerHTML = "";
             
             let foundCount = 0;
             let missCount = 0;
-            let errorWords = data.display_words.filter(w => w.correct === false);
-            let totalToFind = errorWords.length;
+            const errorWords = data.display_words.filter(w => !w.correct);
+            const totalToFind = errorWords.length;
 
             document.getElementById('total').innerText = totalToFind;
 
@@ -75,7 +83,7 @@
                             this.classList.remove('wrong-click');
                             foundCount++;
                             document.getElementById('found').innerText = foundCount;
-                            if (foundCount === totalToFind) alert("Super, Klara! Alles geschafft! 👑");
+                            if (foundCount === totalToFind) setTimeout(() => alert("Klasse, Klara! 👑"), 200);
                         }
                     } else {
                         if (!this.classList.contains('is-correct')) {
@@ -93,7 +101,7 @@
             document.getElementById('game').classList.remove('hidden');
 
         } catch (err) {
-            alert("Fehler im JSON-Format! Bitte kopiere den Text von Gemini erneut. Fehler-Info: " + err.message);
+            alert("Fehler: " + err.message + "\nVersuche nur den Teil zwischen { und } zu kopieren.");
         }
     });
 </script>

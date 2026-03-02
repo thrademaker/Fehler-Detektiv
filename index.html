@@ -30,4 +30,89 @@
     <div id="setup">
         <div class="prompt-box">
             <strong>1. Kopiere diesen bayerischen Lehrer-Prompt:</strong>
-            <code>Handle als bayerischer Grundschullehrer (4. Klasse). Erstelle ein Rechtschreib-Rätsel. Baue 7-10 Fehler ein: Nominalisierungen (nach beim/zum), das/dass, Dehnungs-h, ck/tz, f/v, und Auslautverhärtung (d
+            <code>Handle als bayerischer Grundschullehrer (4. Klasse). Erstelle ein Rechtschreib-Rätsel. Baue 7-10 Fehler ein: Nominalisierungen (nach beim/zum), das/dass, Dehnungs-h, ck/tz, f/v, und Auslautverhärtung (d/t). Antworte NUR mit diesem JSON: {"display_words": [{"w": "Wort", "correct": true, "solution": "Wort"}]}</code>
+        </div>
+        <p><strong>2. Füge Geminis Antwort hier ein:</strong></p>
+        <textarea id="jsonInput" placeholder="Kopiere alles hier rein..."></textarea><br>
+        <button id="startBtn">Rätsel zaubern 🪄</button>
+    </div>
+
+    <div id="game" class="hidden">
+        <div class="story-box" id="textDisplay"></div>
+        <div class="stats">
+            <span>🌟 Gefunden: <span id="found">0</span> / <span id="total">0</span></span>
+            <span>❌ Fehlklicks: <span id="misses">0</span></span>
+        </div>
+        <button onclick="location.reload()" style="background:#999; margin-top:20px;">Neues Rätsel</button>
+    </div>
+</div>
+
+<script>
+    document.getElementById('startBtn').addEventListener('click', function() {
+        let input = document.getElementById('jsonInput').value;
+        
+        // REPARATUR-MODUS:
+        // 1. Schräge Anführungszeichen korrigieren
+        input = input.replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"');
+        // 2. Den JSON-Teil isolieren
+        const start = input.indexOf('{');
+        const end = input.lastIndexOf('}');
+        
+        if (start === -1 || end === -1) {
+            alert("Ich konnte keinen Code finden. Hast du alles kopiert?");
+            return;
+        }
+        
+        let jsonStr = input.substring(start, end + 1);
+
+        // 3. DAS KOMMA-PROBLEM LÖSEN:
+        // Dieser reguläre Ausdruck entfernt Kommas, die direkt vor einer schließenden Klammer stehen
+        jsonStr = jsonStr.replace(/,\s*([\]}])/g, '$1');
+
+        try {
+            const data = JSON.parse(jsonStr);
+            const container = document.getElementById('textDisplay');
+            container.innerHTML = "";
+            
+            let foundCount = 0;
+            let missCount = 0;
+            const totalErrors = data.display_words.filter(w => w.correct === false).length;
+            document.getElementById('total').innerText = totalErrors;
+
+            data.display_words.forEach(item => {
+                const span = document.createElement('span');
+                span.innerText = item.w + " ";
+                span.className = "word";
+
+                span.onclick = function() {
+                    if (item.correct === false) {
+                        if (!this.classList.contains('is-correct')) {
+                            this.innerText = item.solution + " ";
+                            this.classList.add('is-correct');
+                            this.classList.remove('wrong-click');
+                            foundCount++;
+                            document.getElementById('found').innerText = foundCount;
+                            if (foundCount === totalErrors) setTimeout(() => alert("Klasse, Klara! Du hast alle bayerischen Fehler entlarvt! 👑"), 200);
+                        }
+                    } else {
+                        if (!this.classList.contains('is-correct') && !this.classList.contains('wrong-click')) {
+                            missCount++;
+                            document.getElementById('misses').innerText = missCount;
+                            this.classList.add('wrong-click');
+                        }
+                    }
+                };
+                container.appendChild(span);
+            });
+
+            document.getElementById('setup').classList.add('hidden');
+            document.getElementById('game').classList.remove('hidden');
+
+        } catch (e) {
+            console.error(e);
+            alert("Fehler im JSON: " + e.message + "\n\nKopiere den Text von Gemini am besten noch einmal ganz sauber.");
+        }
+    });
+</script>
+</body>
+</html>

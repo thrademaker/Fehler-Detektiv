@@ -5,27 +5,23 @@
     <title>Klaras Fehler-Detektiv</title>
     <style>
         :root { --p: #ff85a1; --s: #fce4ec; --red: #e74c3c; --green: #2ecc71; --blue: #3498db; }
-        
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #fff0f3; padding: 20px; text-align: center; color: #333; }
-        .container { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 850px; margin: auto; border: 3px solid var(--p); }
+        .container { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 950px; margin: auto; border: 3px solid var(--p); }
         
-        /* Druck-Optimierung: Erzwingt Farben im PDF */
         @media print {
             body { background: white !important; padding: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .container { border: 2px solid var(--p) !important; box-shadow: none !important; max-width: 100% !important; width: 100% !important; }
             button, #setup, .no-print { display: none !important; }
-            .is-correct { background-color: var(--green) !important; color: white !important; border-radius: 4px; padding: 2px 4px; }
-            .wrong-click { background-color: var(--red) !important; color: white !important; border-radius: 4px; padding: 2px 4px; }
-            .missed-error { background-color: var(--blue) !important; color: white !important; border-radius: 4px; padding: 2px 4px; }
-            .stats { border: 2px solid var(--p) !important; background: var(--s) !important; }
+            .is-correct { background-color: var(--green) !important; color: white !important; }
+            .wrong-click { background-color: var(--red) !important; color: white !important; }
+            .missed-error { background-color: var(--blue) !important; color: white !important; }
         }
 
-        h1 { color: var(--p); margin-top: 0; }
         .prompt-box { background: #fafafa; border: 1px dashed #ccc; padding: 12px; border-radius: 12px; text-align: left; font-size: 0.85em; margin-bottom: 20px; }
-        code { display: block; background: #eee; padding: 8px; margin-top: 5px; word-break: break-all; border-radius: 5px; }
+        code { display: block; background: #eee; padding: 8px; margin-top: 5px; word-break: break-all; border-radius: 5px; color: #d81b60; font-weight: bold; }
         
-        .story-box { line-height: 2.8; font-size: 1.35em; padding: 25px; background: #fff; border: 2px solid var(--s); border-radius: 20px; text-align: left; margin-bottom: 20px; min-height: 100px; }
-        .word { cursor: pointer; padding: 2px 4px; display: inline-block; border-radius: 6px; transition: 0.1s; }
+        .story-box { line-height: 2.8; font-size: 1.3em; padding: 25px; background: #fff; border: 2px solid var(--s); border-radius: 20px; text-align: left; margin-bottom: 20px; }
+        .word { cursor: pointer; padding: 1px 3px; display: inline-block; border-radius: 6px; }
         
         .is-correct { background-color: var(--green); color: white; font-weight: bold; }
         .wrong-click { background-color: var(--red); color: white; }
@@ -34,14 +30,10 @@
         .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; background: var(--s); padding: 15px; border-radius: 15px; font-weight: bold; margin-top: 20px; }
         .stat-val { font-size: 1.4em; display: block; }
 
-        textarea { width: 100%; height: 120px; border-radius: 10px; border: 2px solid var(--s); padding: 10px; box-sizing: border-box; font-family: monospace; }
-        
-        .btn-group { margin-top: 15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-        button { background: var(--p); color: white; border: none; padding: 12px 24px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 1em; }
-        button:hover { filter: brightness(1.05); }
-        .btn-example { background: #9b59b6; }
+        textarea { width: 100%; height: 120px; border-radius: 10px; border: 2px solid var(--s); padding: 10px; box-sizing: border-box; }
+        .btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px; }
+        button { background: var(--p); color: white; border: none; padding: 12px 24px; border-radius: 30px; cursor: pointer; font-weight: bold; }
         .btn-finish { background: #34495e; }
-        .btn-print { background: #555; }
         .hidden { display: none; }
     </style>
 </head>
@@ -52,13 +44,12 @@
 
     <div id="setup">
         <div class="prompt-box">
-            <strong>Prompt für Gemini:</strong>
-            <code>Erstelle ein bayerisches 4.-Klasse-Rätsel. Baue 8-12 Fehler ein (Nominalisierung, Dehnung, ck/tz, das/dass). Antworte NUR als JSON: {"display_words": [{"w": "Wort", "correct": true, "solution": "Wort"}]}</code>
+            <strong>Neuer Prompt (für Texte bis 1000 Wörter):</strong>
+            <code>Handle als bayerischer Grundschullehrer. Erstelle aus dem Text ein JSON-Rätsel. Baue EXAKT einen Fehler pro 10 Wörter ein (Themen: Nominalisierung, Dehnung, ck/tz, das/dass, v/f). Wichtig: Antworte NUR mit dem JSON-Objekt, keine Einleitung. Format: {"display_words": [{"w": "Wort", "correct": true, "solution": "Wort"}]}</code>
         </div>
-        <textarea id="jsonInput" placeholder="JSON hier einfügen..."></textarea>
+        <textarea id="jsonInput" placeholder="JSON von Gemini hier einfügen..."></textarea>
         <div class="btn-group">
-            <button onclick="loadExample()" class="btn-example">Beispieltext laden 📖</button>
-            <button id="startBtn">Rätsel starten 🪄</button>
+            <button id="startBtn">Rätsel zaubern 🪄</button>
         </div>
     </div>
 
@@ -67,13 +58,13 @@
         
         <div class="stats">
             <div style="color: var(--green);">Gefunden<span id="found" class="stat-val">0</span></div>
-            <div style="color: var(--red);">Falsch getippt<span id="misses" class="stat-val">0</span></div>
+            <div style="color: var(--red);">Falscher Alarm<span id="misses" class="stat-val">0</span></div>
             <div style="color: var(--blue);">Übersehen<span id="missed" class="stat-val">0</span></div>
         </div>
 
         <div class="btn-group no-print">
             <button id="finishBtn" class="btn-finish">Auswertung anzeigen 🏁</button>
-            <button onclick="window.print()" class="btn-print">Als PDF speichern / Drucken 🖨️</button>
+            <button onclick="window.print()" style="background:#555">Als PDF speichern 🖨️</button>
             <button onclick="location.reload()" style="background:#bbb;">Anderer Text</button>
         </div>
     </div>
@@ -83,25 +74,18 @@
     let rawData = [];
     let gameActive = true;
 
-    // Beispiel-JSON Funktion
-    function loadExample() {
-        const example = {
-            "display_words": [
-                {"w": "Die", "correct": true, "solution": "Die"}, {"w": "Mondlicht‑Wiese", "correct": true, "solution": "Mondlicht‑Wiese"}, {"w": "In", "correct": true, "solution": "In"}, {"w": "einem", "correct": true, "solution": "einem"}, {"w": "fernen", "correct": true, "solution": "fernen"}, {"w": "Könickreich,", "correct": false, "solution": "Königreich,"}, {"w": "in", "correct": true, "solution": "in"}, {"w": "dem", "correct": true, "solution": "dem"}, {"w": "die", "correct": true, "solution": "die"}, {"w": "Nächte", "correct": true, "solution": "Nächte"}, {"w": "silbern", "correct": true, "solution": "silbern"}, {"w": "glitzerten", "correct": true, "solution": "glitzerten"}, {"w": "und", "correct": true, "solution": "und"}, {"w": "die", "correct": true, "solution": "die"}, {"w": "Sterne", "correct": true, "solution": "Sterne"}, {"w": "wie", "correct": true, "solution": "wie"}, {"w": "winzige", "correct": true, "solution": "winzige"}, {"w": "Laternen", "correct": true, "solution": "Laternen"}, {"w": "am", "correct": true, "solution": "am"}, {"w": "Himmel", "correct": true, "solution": "Himmel"}, {"w": "hingen,", "correct": true, "solution": "hingen,"}, {"w": "lebte", "correct": true, "solution": "lebte"}, {"w": "die", "correct": true, "solution": "die"}, {"w": "zennjährige", "correct": false, "solution": "zehnjährige"}, {"w": "Prinzessin", "correct": true, "solution": "Prinzessin"}, {"w": "Liora.", "correct": true, "solution": "Liora."}, {"w": "Sie", "correct": true, "solution": "Sie"}, {"w": "war", "correct": true, "solution": "war"}, {"w": "neugierig,", "correct": true, "solution": "neugierig,"}, {"w": "mutig", "correct": true, "solution": "mutig"}, {"w": "und", "correct": true, "solution": "und"}, {"w": "hatte", "correct": true, "solution": "hatte"}, {"w": "eine", "correct": true, "solution": "eine"}, {"w": "besondere", "correct": true, "solution": "besondere"}, {"w": "Gabe:", "correct": true, "solution": "Gabe:"}, {"w": "Sie", "correct": true, "solution": "Sie"}, {"w": "konnte", "correct": true, "solution": "konnte"}, {"w": "Tiere", "correct": true, "solution": "Tiere"}, {"w": "versteehn,", "correct": false, "solution": "verstehen,"}, {"w": "wenn", "correct": true, "solution": "wenn"}, {"w": "sie", "correct": true, "solution": "sie"}, {"w": "ganz", "correct": true, "solution": "ganz"}, {"w": "Leise", "correct": false, "solution": "leise"}, {"w": "sprach.", "correct": true, "solution": "sprach."}, {"w": "Eines", "correct": true, "solution": "Eines"}, {"w": "abends,", "correct": false, "solution": "Abends,"}, {"w": "als", "correct": true, "solution": "als"}, {"w": "der", "correct": true, "solution": "der"}, {"w": "Mond", "correct": true, "solution": "Mond"}, {"w": "besonders", "correct": true, "solution": "besonders"}, {"w": "rund", "correct": true, "solution": "rund"}, {"w": "und", "correct": true, "solution": "und"}, {"w": "hell", "correct": true, "solution": "hell"}, {"w": "über", "correct": true, "solution": "über"}, {"w": "dem", "correct": true, "solution": "dem"}, {"w": "Schloss", "correct": true, "solution": "Schloss"}, {"w": "stand,", "correct": true, "solution": "stand,"}, {"w": "hörte", "correct": true, "solution": "hörte"}, {"w": "Liora", "correct": true, "solution": "Liora"}, {"w": "ein", "correct": true, "solution": "ein"}, {"w": "sanftes", "correct": true, "solution": "sanftes"}, {"w": "Schnauben", "correct": true, "solution": "Schnauben"}, {"w": "aus", "correct": true, "solution": "aus"}, {"w": "dem", "correct": true, "solution": "dem"}, {"w": "Schlossgarten.", "correct": true, "solution": "Schlossgarten."}, {"w": "Sie", "correct": true, "solution": "Sie"}, {"w": "schlich", "correct": true, "solution": "schlich"}, {"w": "barfuß", "correct": true, "solution": "barfuß"}, {"w": "über", "correct": true, "solution": "über"}, {"w": "dass", "correct": false, "solution": "das"}, {"w": "kühle", "correct": true, "solution": "kühle"}, {"w": "Gras", "correct": true, "solution": "Gras"}, {"w": "–", "correct": true, "solution": "–"}, {"w": "und", "correct": true, "solution": "und"}, {"w": "dort,", "correct": true, "solution": "dort,"}, {"w": "zwischen", "correct": true, "solution": "zwischen"}, {"w": "den", "correct": true, "solution": "den"}, {"w": "Rosenbüschen,", "correct": true, "solution": "Rosenbüschen,"}, {"w": "stand", "correct": true, "solution": "stand"}, {"w": "ein", "correct": true, "solution": "ein"}, {"w": "Einhorn.", "correct": true, "solution": "Einhorn."}, {"w": "Sein", "correct": true, "solution": "Sein"}, {"w": "Fell", "correct": true, "solution": "Fell"}, {"w": "schimmerte", "correct": true, "solution": "schimmerte"}, {"w": "wie", "correct": true, "solution": "wie"}, {"w": "vrisch", "correct": false, "solution": "frisch"}, {"w": "gefallener", "correct": true, "solution": "gefallener"}, {"w": "Schnee,", "correct": true, "solution": "Schnee,"}, {"w": "und", "correct": true, "solution": "und"}, {"w": "seine", "correct": true, "solution": "seine"}, {"w": "Mähne", "correct": true, "solution": "Mähne"}, {"w": "leuchtete", "correct": true, "solution": "leuchtete"}, {"w": "in", "correct": true, "solution": "in"}, {"w": "allen", "correct": true, "solution": "allen"}, {"w": "Farben", "correct": true, "solution": "Farben"}, {"w": "des", "correct": true, "solution": "des"}, {"w": "Regenbogens.", "correct": true, "solution": "Regenbogens."}, {"w": "'Ich", "correct": true, "solution": "'Ich"}, {"w": "heiße", "correct": true, "solution": "heiße"}, {"w": "Lumira',", "correct": true, "solution": "Lumira',"}, {"w": "sagte", "correct": true, "solution": "sagte"}, {"w": "das", "correct": true, "solution": "das"}, {"w": "Einhorn", "correct": true, "solution": "Einhorn"}, {"w": "mit", "correct": true, "solution": "mit"}, {"w": "einer", "correct": true, "solution": "einer"}, {"w": "Stimme,", "correct": true, "solution": "Stimme,"}, {"w": "die", "correct": true, "solution": "die"}, {"w": "wie", "correct": true, "solution": "wie"}, {"w": "Windspielklänge", "correct": true, "solution": "Windspielklänge"}, {"w": "klanck.", "correct": false, "solution": "klang."}, {"w": "'Ich", "correct": true, "solution": "'Ich"}, {"w": "brauche", "correct": true, "solution": "brauche"}, {"w": "deine", "correct": true, "solution": "deine"}, {"w": "Hilfe.'", "correct": true, "solution": "Hilfe.'"}, {"w": "Liora", "correct": true, "solution": "Liora"}, {"w": "spürte", "correct": true, "solution": "spürte"}, {"w": "sofort,", "correct": true, "solution": "sofort,"}, {"w": "das", "correct": false, "solution": "dass"}, {"w": "dies", "correct": true, "solution": "dies"}, {"w": "kein", "correct": true, "solution": "kein"}, {"w": "gewöhnlicher", "correct": true, "solution": "gewöhnlicher"}, {"w": "Besuch", "correct": true, "solution": "Besuch"}, {"w": "wahr.", "correct": false, "solution": "war."}, {"w": "'Was", "correct": true, "solution": "'Was"}, {"w": "ist", "correct": true, "solution": "ist"}, {"w": "passiert?',", "correct": true, "solution": "passiert?',"}, {"w": "fragte", "correct": true, "solution": "fragte"}, {"w": "sie", "correct": true, "solution": "sie"}, {"w": "und", "correct": true, "solution": "und"}, {"w": "legte", "correct": true, "solution": "legte"}, {"w": "vorsichtig", "correct": true, "solution": "vorsichtig"}, {"w": "ihre", "correct": true, "solution": "ihre"}, {"w": "Hand", "correct": true, "solution": "Hand"}, {"w": "auf", "correct": true, "solution": "auf"}, {"w": "Lumiras", "correct": true, "solution": "Lumiras"}, {"w": "warmen", "correct": true, "solution": "warmen"}, {"w": "hals.", "correct": false, "solution": "Hals."}, {"w": "'Der", "correct": true, "solution": "'Der"}, {"w": "Mondstein,", "correct": true, "solution": "Mondstein,"}, {"w": "der", "correct": true, "solution": "der"}, {"w": "unser", "correct": true, "solution": "unser"}, {"w": "Tal", "correct": true, "solution": "Tal"}, {"w": "beschüzt,", "correct": false, "solution": "beschützt,"}, {"w": "ist", "correct": true, "solution": "ist"}, {"w": "erloschen',", "correct": true, "solution": "erloschen',"}, {"w": "erklärte", "correct": true, "solution": "erklärte"}, {"w": "Lumira.", "correct": true, "solution": "Lumira."}, {"w": "'Ohne", "correct": true, "solution": "'Ohne"}, {"w": "ihn", "correct": true, "solution": "ihn"}, {"w": "ferlieren", "correct": false, "solution": "verlieren"}, {"w": "die", "correct": true, "solution": "die"}, {"w": "magischen", "correct": true, "solution": "magischen"}, {"w": "Wesen", "correct": true, "solution": "Wesen"}, {"w": "ihre", "correct": true, "solution": "ihre"}, {"w": "Kräfte.", "correct": true, "solution": "Kräfte."}, {"w": "Nur", "correct": true, "solution": "Nur"}, {"w": "ein", "correct": true, "solution": "ein"}, {"w": "Menschenkind", "correct": true, "solution": "Menschenkind"}, {"w": "mit", "correct": true, "solution": "mit"}, {"w": "einem", "correct": true, "solution": "einem"}, {"w": "mutigen", "correct": true, "solution": "mutigen"}, {"w": "Herzen", "correct": true, "solution": "Herzen"}, {"w": "kann", "correct": true, "solution": "kann"}, {"w": "ihn", "correct": true, "solution": "ihn"}, {"w": "wieder", "correct": true, "solution": "wieder"}, {"w": "zum", "correct": true, "solution": "zum"}, {"w": "leuchten", "correct": false, "solution": "Leuchten"}, {"w": "bringen.'", "correct": true, "solution": "bringen.'"}, {"w": "Liora", "correct": true, "solution": "Liora"}, {"w": "nickte", "correct": true, "solution": "nickte"}, {"w": "entschlossen.", "correct": true, "solution": "entschlossen."}, {"w": "'Dann", "correct": true, "solution": "'Dann"}, {"w": "lass", "correct": true, "solution": "lass"}, {"w": "uns", "correct": true, "solution": "uns"}, {"w": "keine", "correct": true, "solution": "keine"}, {"w": "Zeit", "correct": true, "solution": "Zeit"}, {"w": "verlieren.'", "correct": true, "solution": "verlieren.'"}, {"w": "Gemeinsam", "correct": true, "solution": "Gemeinsam"}, {"w": "ritten", "correct": true, "solution": "ritten"}, {"w": "sie", "correct": true, "solution": "sie"}, {"w": "durch", "correct": true, "solution": "durch"}, {"w": "die", "correct": true, "solution": "die"}, {"w": "Nacht,", "correct": true, "solution": "Nacht,"}, {"w": "über", "correct": true, "solution": "über"}, {"w": "glitzernde", "correct": true, "solution": "glitzernde"}, {"w": "Wihsen", "correct": false, "solution": "Wiesen"}, {"w": "und", "correct": true, "solution": "und"}, {"w": "durch", "correct": true, "solution": "durch"}, {"w": "Wälder,", "correct": true, "solution": "Wälder,"}, {"w": "in", "correct": true, "solution": "in"}, {"w": "denen", "correct": true, "solution": "denen"}, {"w": "die", "correct": true, "solution": "die"}, {"w": "Bäume", "correct": true, "solution": "Bäume"}, {"w": "flüsterten.", "correct": true, "solution": "flüsterten."}, {"w": "Lumira", "correct": true, "solution": "Lumira"}, {"w": "lief", "correct": true, "solution": "lief"}, {"w": "so", "correct": true, "solution": "so"}, {"w": "leicht,", "correct": true, "solution": "leicht,"}, {"w": "das", "correct": false, "solution": "dass"}, {"w": "es", "correct": true, "solution": "es"}, {"w": "sich", "correct": true, "solution": "sich"}, {"w": "anfühlte,", "correct": true, "solution": "anfühlte,"}, {"w": "als", "correct": true, "solution": "als"}, {"w": "würden", "correct": true, "solution": "würden"}, {"w": "sie", "correct": true, "solution": "sie"}, {"w": "über", "correct": true, "solution": "über"}, {"w": "Wolken", "correct": true, "solution": "Wolken"}, {"w": "schweben.", "correct": true, "solution": "schweben."}, {"w": "Schließlich", "correct": true, "solution": "Schließlich"}, {"w": "erreichten", "correct": true, "solution": "erreichten"}, {"w": "sie", "correct": true, "solution": "sie"}, {"w": "eine", "correct": true, "solution": "eine"}, {"w": "Lichtung,", "correct": true, "solution": "Lichtung,"}, {"w": "auf", "correct": true, "solution": "auf"}, {"w": "der", "correct": true, "solution": "der"}, {"w": "ein", "correct": true, "solution": "ein"}, {"w": "großer,", "correct": true, "solution": "großer,"}, {"w": "grauer", "correct": true, "solution": "grauer"}, {"w": "Stein", "correct": true, "solution": "Stein"}, {"w": "lag", "correct": true, "solution": "lag"}, {"w": "–", "correct": true, "solution": "–"}, {"w": "der", "correct": true, "solution": "der"}, {"w": "Mondstein.", "correct": true, "solution": "Mondstein."}, {"w": "Er", "correct": true, "solution": "Er"}, {"w": "war", "correct": true, "solution": "war"}, {"w": "kald", "correct": false, "solution": "kalt"}, {"w": "und", "correct": true, "solution": "und"}, {"w": "dunkel,", "correct": true, "solution": "dunkel,"}, {"w": "als", "correct": true, "solution": "als"}, {"w": "hätte", "correct": true, "solution": "hätte"}, {"w": "er", "correct": true, "solution": "er"}, {"w": "all", "correct": true, "solution": "all"}, {"w": "seinen", "correct": true, "solution": "seinen"}, {"w": "Zauber", "correct": true, "solution": "Zauber"}, {"w": "verloren.", "correct": true, "solution": "verloren."}, {"w": "'Was", "correct": true, "solution": "'Was"}, {"w": "muss", "correct": true, "solution": "muss"}, {"w": "ich", "correct": true, "solution": "ich"}, {"w": "tun?',", "correct": true, "solution": "tun?',"}, {"w": "fragte", "correct": true, "solution": "fragte"}, {"w": "Liora.", "correct": true, "solution": "Liora."}, {"w": "Lumira", "correct": true, "solution": "Lumira"}, {"w": "senkte", "correct": true, "solution": "senkte"}, {"w": "den", "correct": true, "solution": "den"}, {"w": "Kopf.", "correct": true, "solution": "Kopf."}, {"w": "'Du", "correct": true, "solution": "'Du"}, {"w": "musst", "correct": true, "solution": "musst"}, {"w": "ihm", "correct": true, "solution": "ihm"}, {"w": "eine", "correct": true, "solution": "eine"}, {"w": "Erinnerung", "correct": true, "solution": "Erinnerung"}, {"w": "schenken.", "correct": true, "solution": "schenken."}, {"w": "Eine,", "correct": true, "solution": "Eine,"}, {"w": "die", "correct": true, "solution": "die"}, {"w": "so", "correct": true, "solution": "so"}, {"w": "warm", "correct": true, "solution": "warm"}, {"w": "ist,", "correct": true, "solution": "ist,"}, {"w": "das", "correct": false, "solution": "dass"}, {"w": "sie", "correct": true, "solution": "sie"}, {"w": "den", "correct": true, "solution": "den"}, {"w": "Zauber", "correct": true, "solution": "Zauber"}, {"w": "wieder", "correct": true, "solution": "wieder"}, {"w": "wekt.'", "correct": false, "solution": "weckt.'"}, {"w": "Liora", "correct": true, "solution": "Liora"}, {"w": "schloss", "correct": true, "solution": "schloss"}, {"w": "die", "correct": true, "solution": "die"}, {"w": "Augen", "correct": true, "solution": "Augen"}, {"w": "und", "correct": true, "solution": "und"}, {"w": "dachte", "correct": true, "solution": "dachte"}, {"w": "an", "correct": true, "solution": "an"}, {"w": "den", "correct": true, "solution": "den"}, {"w": "schönsten", "correct": true, "solution": "schönsten"}, {"w": "Moment", "correct": true, "solution": "Moment"}, {"w": "ihres", "correct": true, "solution": "ihres"}, {"w": "Lebens:", "correct": true, "solution": "Lebens:"}, {"w": "den", "correct": true, "solution": "den"}, {"w": "Tag,", "correct": true, "solution": "Tag,"}, {"w": "an", "correct": true, "solution": "an"}, {"w": "dem", "correct": true, "solution": "dem"}, {"w": "sie", "correct": true, "solution": "sie"}, {"w": "zum", "correct": true, "solution": "zum"}, {"w": "ersten", "correct": true, "solution": "ersten"}, {"w": "Mal", "correct": true, "solution": "Mal"}, {"w": "ein", "correct": true, "solution": "ein"}, {"w": "kleines", "correct": true, "solution": "kleines"}, {"w": "verletztes", "correct": true, "solution": "verletztes"}, {"w": "Rehkitz", "correct": true, "solution": "Rehkitz"}, {"w": "gepflegt", "correct": true, "solution": "gepflegt"}, {"w": "hatte,", "correct": true, "solution": "hatte,"}, {"w": "bis", "correct": true, "solution": "bis"}, {"w": "es", "correct": true, "solution": "es"}, {"w": "wieder", "correct": true, "solution": "wieder"}, {"w": "laufen", "correct": true, "solution": "laufen"}, {"w": "konnte.", "correct": true, "solution": "konnte."}, {"w": "Sie", "correct": true, "solution": "Sie"}, {"w": "erinnerte", "correct": true, "solution": "erinnerte"}, {"w": "sich", "correct": true, "solution": "sich"}, {"w": "an", "correct": true, "solution": "an"}, {"w": "die", "correct": true, "solution": "die"}, {"w": "Freude,", "correct": true, "solution": "Freude,"}, {"w": "als", "correct": true, "solution": "als"}, {"w": "es", "correct": true, "solution": "es"}, {"w": "gesund", "correct": true, "solution": "gesund"}, {"w": "davonhüpfte.", "correct": true, "solution": "davonhüpfte."}, {"w": "Ein", "correct": true, "solution": "Ein"}, {"w": "sanftes", "correct": true, "solution": "sanftes"}, {"w": "Leuchten", "correct": true, "solution": "Leuchten"}, {"w": "ging", "correct": true, "solution": "ging"}, {"w": "von", "correct": true, "solution": "von"}, {"w": "ihrem", "correct": true, "solution": "ihrem"}, {"w": "Herzen", "correct": true, "solution": "Herzen"}, {"w": "aus,", "correct": true, "solution": "aus,"}, {"w": "wanderte", "correct": true, "solution": "wanderte"}, {"w": "durch", "correct": true, "solution": "durch"}, {"w": "ihre", "correct": true, "solution": "ihre"}, {"w": "Hände", "correct": true, "solution": "Hände"}, {"w": "und", "correct": true, "solution": "und"}, {"w": "berührte", "correct": true, "solution": "berührte"}, {"w": "den", "correct": true, "solution": "den"}, {"w": "Stein.", "correct": true, "solution": "Stein."}, {"w": "Erst", "correct": true, "solution": "Erst"}, {"w": "flackerte", "correct": true, "solution": "er,"}, {"w": "er,", "correct": true, "solution": "er,"}, {"w": "dann", "correct": true, "solution": "dann"}, {"w": "begann", "correct": true, "solution": "begann"}, {"w": "er", "correct": true, "solution": "er"}, {"w": "hell", "correct": true, "solution": "hell"}, {"w": "zu", "correct": true, "solution": "zu"}, {"w": "strahlen", "correct": true, "solution": "strahlen"}, {"w": "–", "correct": true, "solution": "–"}, {"w": "heller", "correct": true, "solution": "heller"}, {"w": "als", "correct": true, "solution": "als"}, {"w": "der", "correct": true, "solution": "der"}, {"w": "Mond", "correct": true, "solution": "Mond"}, {"w": "selbst.", "correct": true, "solution": "selbst."}, {"w": "Lumira", "correct": true, "solution": "Lumira"}, {"w": "wieherte", "correct": true, "solution": "wieherte"}, {"w": "vor", "correct": true, "solution": "vor"}, {"w": "Freude.", "correct": true, "solution": "Freude."}, {"w": "'Du", "correct": true, "solution": "'Du"}, {"w": "hast", "correct": true, "solution": "hast"}, {"w": "es", "correct": true, "solution": "es"}, {"w": "geschafft!'", "correct": true, "solution": "geschafft!'"}, {"w": "Der", "correct": true, "solution": "Der"}, {"w": "Walt", "correct": false, "solution": "Wald"}, {"w": "erwachte", "correct": true, "solution": "erwachte"}, {"w": "zum", "correct": true, "solution": "zum"}, {"w": "Leben:", "correct": true, "solution": "Leben:"}, {"w": "Glühwürmchen", "correct": true, "solution": "Glühwürmchen"}, {"w": "tanzten,", "correct": true, "solution": "tanzten,"}, {"w": "Blumen", "correct": true, "solution": "Blumen"}, {"w": "öffneten", "correct": true, "solution": "öffneten"}, {"w": "sich,", "correct": true, "solution": "sich,"}, {"w": "und", "correct": true, "solution": "und"}, {"w": "ein", "correct": true, "solution": "ein"}, {"w": "warmer", "correct": true, "solution": "warmer"}, {"w": "Wind", "correct": true, "solution": "Wind"}, {"w": "strich", "correct": true, "solution": "strich"}, {"w": "über", "correct": true, "solution": "über"}, {"w": "die", "correct": true, "solution": "die"}, {"w": "Lichtung.", "correct": true, "solution": "Lichtung."}
-            ]
-        };
-        document.getElementById('jsonInput').value = JSON.stringify(example);
-    }
-
     document.getElementById('startBtn').addEventListener('click', function() {
         let input = document.getElementById('jsonInput').value;
         const start = input.indexOf('{');
         const end = input.lastIndexOf('}');
-        if (start === -1 || end === -1) return alert("Code nicht gefunden!");
-        
+        if (start === -1) return alert("Kein JSON gefunden!");
+
         try {
-            const data = JSON.parse(input.substring(start, end + 1).replace(/\n/g, " "));
+            // Reinigung für sehr lange Texte
+            let jsonStr = input.substring(start, end + 1).replace(/\n/g, " ").replace(/,\s*([\]}])/g, '$1');
+            const data = JSON.parse(jsonStr);
             rawData = data.display_words;
+            
             const container = document.getElementById('textDisplay');
             container.innerHTML = "";
             gameActive = true;
@@ -109,42 +93,43 @@
             let totalErrors = rawData.filter(w => !w.correct).length;
             document.getElementById('found').parentElement.innerHTML = `Gefunden <span id="found" class="stat-val">0 / ${totalErrors}</span>`;
 
+            // Dokument-Fragment für bessere Performance bei 1000+ Wörtern
+            const fragment = document.createDocumentFragment();
             rawData.forEach((item, idx) => {
                 const span = document.createElement('span');
                 span.innerText = item.w + " ";
                 span.className = "word";
                 span.id = "w-" + idx;
-
-                span.onclick = function() {
-                    if (!gameActive) return;
-                    if (item.correct === false) {
-                        if (!this.classList.contains('is-correct')) {
-                            this.innerText = item.solution + " ";
-                            this.classList.add('is-correct');
-                            this.classList.remove('wrong-click');
-                            updateStats();
-                        }
-                    } else {
-                        if (!this.classList.contains('is-correct') && !this.classList.contains('wrong-click')) {
-                            this.classList.add('wrong-click');
-                            updateStats();
-                        }
-                    }
-                };
-                container.appendChild(span);
+                span.onclick = () => handleWordClick(span, item);
+                fragment.appendChild(span);
             });
+            container.appendChild(fragment);
 
             document.getElementById('setup').classList.add('hidden');
             document.getElementById('game').classList.remove('hidden');
-        } catch (e) { alert("JSON Fehler!"); }
+        } catch (e) { alert("JSON-Fehler! Bei sehr langen Texten hat Gemini evtl. ein Komma vergessen."); }
     });
+
+    function handleWordClick(el, item) {
+        if (!gameActive) return;
+        if (item.correct === false) {
+            if (!el.classList.contains('is-correct')) {
+                el.innerText = item.solution + " ";
+                el.classList.add('is-correct');
+                el.classList.remove('wrong-click');
+                updateStats();
+            }
+        } else if (!el.classList.contains('is-correct') && !el.classList.contains('wrong-click')) {
+            el.classList.add('wrong-click');
+            updateStats();
+        }
+    }
 
     function updateStats() {
         const found = document.querySelectorAll('.is-correct').length;
-        const misses = document.querySelectorAll('.wrong-click').length;
         const total = rawData.filter(w => !w.correct).length;
         document.getElementById('found').innerText = `${found} / ${total}`;
-        document.getElementById('misses').innerText = misses;
+        document.getElementById('misses').innerText = document.querySelectorAll('.wrong-click').length;
     }
 
     document.getElementById('finishBtn').addEventListener('click', function() {
@@ -164,3 +149,4 @@
 </script>
 </body>
 </html>
+

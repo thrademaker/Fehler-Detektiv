@@ -11,7 +11,6 @@
         code { display: block; background: #eee; padding: 10px; margin-top: 5px; word-break: break-all; border-radius: 5px; color: #d81b60; font-weight: bold; white-space: pre-wrap; }
         .story-box { line-height: 2.8; font-size: 1.35em; padding: 25px; background: #fff; border: 2px solid var(--s); border-radius: 20px; text-align: left; margin-bottom: 20px; }
         .word { cursor: pointer; padding: 2px 4px; display: inline-block; border-radius: 6px; border-bottom: 2px solid transparent; }
-        .word:hover { border-bottom-color: var(--p); }
         .is-correct { background-color: var(--green) !important; color: white !important; font-weight: bold; }
         .wrong-click { background-color: var(--red) !important; color: white !important; }
         .missed-error { background-color: var(--blue) !important; color: white !important; font-weight: bold; }
@@ -19,14 +18,13 @@
         .stat-val { font-size: 1.4em; display: block; }
         textarea { width: 100%; height: 150px; border-radius: 10px; border: 2px solid var(--s); padding: 10px; box-sizing: border-box; font-family: monospace; }
         .btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px; }
-        button { background: var(--p); color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 1em; }
+        button { background: var(--p); color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; }
         .btn-finish { background: #34495e; }
         .hidden { display: none; }
         @media print {
             button, #setup, .no-print { display: none !important; }
             body { background: white; }
             .container { border: none; box-shadow: none; }
-            .word { border: none; }
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
@@ -38,15 +36,10 @@
 
     <div id="setup">
         <div class="prompt-box">
-            <strong>Kopiere diesen optimierten Prompt für Gemini:</strong>
-            <code>Erstelle ein bayerisches Grundschul-Rätsel (4. Klasse). Baue ca. einen Fehler auf 10 Wörter ein.
-Antworte NUR in diesem kompakten JSON-Format:
-{
-  "text": "Hier den ganzen Text mit Fehlern einfügen...",
-  "corrections": {"Fehlerwort1": "Richtig1", "Fehlerwort2": "Richtig2"}
-}</code>
+            <strong>Kopiere diesen Prompt und füge hinten deine URL ein:</strong>
+            <code>Besuche die folgende Webseite, extrahiere den Haupttext der Geschichte/des Artikels und erstelle daraus ein bayerisches Grundschul-Rätsel (4. Klasse). Baue ca. einen Fehler auf 10 Wörter ein (Themen: Nominalisierung, Dehnung, ck/tz, das/dass, v/f). Antworte NUR im JSON-Format: {"text": "Text mit Fehlern...", "corrections": {"Fehler": "Richtig"}}. Hier ist die URL: </code>
         </div>
-        <textarea id="jsonInput" placeholder="Ergebnis von Gemini hier einfügen..."></textarea>
+        <textarea id="jsonInput" placeholder="Kopiere die JSON-Antwort von Gemini hier hinein..."></textarea>
         <div class="btn-group">
             <button id="startBtn">Rätsel zaubern 🪄</button>
         </div>
@@ -62,7 +55,7 @@ Antworte NUR in diesem kompakten JSON-Format:
         <div class="btn-group no-print">
             <button id="finishBtn" class="btn-finish">Auswertung anzeigen 🏁</button>
             <button onclick="window.print()" style="background:#555">Als PDF speichern 🖨️</button>
-            <button onclick="location.reload()" style="background:#bbb;">Anderer Text</button>
+            <button onclick="location.reload()" style="background:#bbb;">Nächstes Abenteuer</button>
         </div>
     </div>
 </div>
@@ -77,6 +70,8 @@ Antworte NUR in diesem kompakten JSON-Format:
         try {
             const start = input.indexOf('{');
             const end = input.lastIndexOf('}');
+            if (start === -1) throw new Error("Kein JSON gefunden");
+            
             const data = JSON.parse(input.substring(start, end + 1).replace(/\n/g, " "));
             
             corrections = data.corrections;
@@ -88,25 +83,23 @@ Antworte NUR in diesem kompakten JSON-Format:
             totalErrors = Object.keys(corrections).length;
             document.getElementById('found').parentElement.innerHTML = `Gefunden <span id="found" class="stat-val">0 / ${totalErrors}</span>`;
 
-            words.forEach((word, idx) => {
-                const cleanWord = word.replace(/[.,!?;:]/g, "");
+            words.forEach((word) => {
+                const cleanWord = word.replace(/[.,!?;:()]/g, "");
                 const span = document.createElement('span');
                 span.innerText = word + " ";
                 span.className = "word";
                 
-                // Prüfen ob Wort (ohne Satzzeichen) in den Korrekturen ist
                 if (corrections[cleanWord]) {
                     span.dataset.isError = "true";
                     span.dataset.solution = corrections[cleanWord];
+                    span.dataset.originalErr = cleanWord;
                 }
 
                 span.onclick = function() {
                     if (!gameActive) return;
                     if (this.dataset.isError === "true") {
                         if (!this.classList.contains('is-correct')) {
-                            // Ersetze nur das Wort, behalte Satzzeichen bei
-                            const original = this.innerText;
-                            this.innerText = original.replace(cleanWord, this.dataset.solution);
+                            this.innerText = this.innerText.replace(this.dataset.originalErr, this.dataset.solution);
                             this.classList.add('is-correct');
                             this.classList.remove('wrong-click');
                             updateStats();
@@ -122,7 +115,7 @@ Antworte NUR in diesem kompakten JSON-Format:
             document.getElementById('setup').classList.add('hidden');
             document.getElementById('game').classList.remove('hidden');
         } catch (e) {
-            alert("Fehler: Das JSON von Gemini ist unvollständig. Bitte kopiere die gesamte Antwort.");
+            alert("Fehler: Konnte das Rätsel nicht laden. Achte darauf, die gesamte JSON-Antwort von Gemini zu kopieren.");
         }
     });
 

@@ -5,36 +5,30 @@
     <title>Klaras Fehler-Detektiv</title>
     <style>
         :root { --p: #ff85a1; --s: #fce4ec; --red: #e74c3c; --green: #2ecc71; --blue: #3498db; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #fff0f3; padding: 20px; text-align: center; color: #333; }
-        .container { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 950px; margin: auto; border: 3px solid var(--p); }
-        
-        @media print {
-            body { background: white !important; padding: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .container { border: 2px solid var(--p) !important; box-shadow: none !important; max-width: 100% !important; width: 100% !important; }
-            button, #setup, .no-print { display: none !important; }
-            .is-correct { background-color: var(--green) !important; color: white !important; }
-            .wrong-click { background-color: var(--red) !important; color: white !important; }
-            .missed-error { background-color: var(--blue) !important; color: white !important; }
-        }
-
-        .prompt-box { background: #fafafa; border: 1px dashed #ccc; padding: 12px; border-radius: 12px; text-align: left; font-size: 0.85em; margin-bottom: 20px; }
-        code { display: block; background: #eee; padding: 8px; margin-top: 5px; word-break: break-all; border-radius: 5px; color: #d81b60; font-weight: bold; }
-        
-        .story-box { line-height: 2.8; font-size: 1.3em; padding: 25px; background: #fff; border: 2px solid var(--s); border-radius: 20px; text-align: left; margin-bottom: 20px; }
-        .word { cursor: pointer; padding: 1px 3px; display: inline-block; border-radius: 6px; }
-        
-        .is-correct { background-color: var(--green); color: white; font-weight: bold; }
-        .wrong-click { background-color: var(--red); color: white; }
-        .missed-error { background-color: var(--blue); color: white; font-weight: bold; }
-        
+        body { font-family: 'Segoe UI', sans-serif; background: #fff0f3; padding: 20px; text-align: center; }
+        .container { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 900px; margin: auto; border: 3px solid var(--p); }
+        .prompt-box { background: #fafafa; border: 1px dashed #ccc; padding: 15px; border-radius: 12px; text-align: left; font-size: 0.85em; margin-bottom: 20px; }
+        code { display: block; background: #eee; padding: 10px; margin-top: 5px; word-break: break-all; border-radius: 5px; color: #d81b60; font-weight: bold; white-space: pre-wrap; }
+        .story-box { line-height: 2.8; font-size: 1.35em; padding: 25px; background: #fff; border: 2px solid var(--s); border-radius: 20px; text-align: left; margin-bottom: 20px; }
+        .word { cursor: pointer; padding: 2px 4px; display: inline-block; border-radius: 6px; border-bottom: 2px solid transparent; }
+        .word:hover { border-bottom-color: var(--p); }
+        .is-correct { background-color: var(--green) !important; color: white !important; font-weight: bold; }
+        .wrong-click { background-color: var(--red) !important; color: white !important; }
+        .missed-error { background-color: var(--blue) !important; color: white !important; font-weight: bold; }
         .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; background: var(--s); padding: 15px; border-radius: 15px; font-weight: bold; margin-top: 20px; }
         .stat-val { font-size: 1.4em; display: block; }
-
-        textarea { width: 100%; height: 120px; border-radius: 10px; border: 2px solid var(--s); padding: 10px; box-sizing: border-box; }
-        .btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px; }
-        button { background: var(--p); color: white; border: none; padding: 12px 24px; border-radius: 30px; cursor: pointer; font-weight: bold; }
+        textarea { width: 100%; height: 150px; border-radius: 10px; border: 2px solid var(--s); padding: 10px; box-sizing: border-box; font-family: monospace; }
+        .btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px; }
+        button { background: var(--p); color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 1em; }
         .btn-finish { background: #34495e; }
         .hidden { display: none; }
+        @media print {
+            button, #setup, .no-print { display: none !important; }
+            body { background: white; }
+            .container { border: none; box-shadow: none; }
+            .word { border: none; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
     </style>
 </head>
 <body>
@@ -44,10 +38,15 @@
 
     <div id="setup">
         <div class="prompt-box">
-            <strong>Neuer Prompt (für Texte bis 1000 Wörter):</strong>
-            <code>Handle als bayerischer Grundschullehrer. Erstelle aus dem Text ein JSON-Rätsel. Baue EXAKT einen Fehler pro 10 Wörter ein (Themen: Nominalisierung, Dehnung, ck/tz, das/dass, v/f). Wichtig: Antworte NUR mit dem JSON-Objekt, keine Einleitung. Format: {"display_words": [{"w": "Wort", "correct": true, "solution": "Wort"}]}</code>
+            <strong>Kopiere diesen optimierten Prompt für Gemini:</strong>
+            <code>Erstelle ein bayerisches Grundschul-Rätsel (4. Klasse). Baue ca. einen Fehler auf 10 Wörter ein.
+Antworte NUR in diesem kompakten JSON-Format:
+{
+  "text": "Hier den ganzen Text mit Fehlern einfügen...",
+  "corrections": {"Fehlerwort1": "Richtig1", "Fehlerwort2": "Richtig2"}
+}</code>
         </div>
-        <textarea id="jsonInput" placeholder="JSON von Gemini hier einfügen..."></textarea>
+        <textarea id="jsonInput" placeholder="Ergebnis von Gemini hier einfügen..."></textarea>
         <div class="btn-group">
             <button id="startBtn">Rätsel zaubern 🪄</button>
         </div>
@@ -55,13 +54,11 @@
 
     <div id="game" class="hidden">
         <div class="story-box" id="textDisplay"></div>
-        
         <div class="stats">
-            <div style="color: var(--green);">Gefunden<span id="found" class="stat-val">0</span></div>
-            <div style="color: var(--red);">Falscher Alarm<span id="misses" class="stat-val">0</span></div>
-            <div style="color: var(--blue);">Übersehen<span id="missed" class="stat-val">0</span></div>
+            <div style="color: var(--green);">Gefunden <span id="found" class="stat-val">0</span></div>
+            <div style="color: var(--red);">Falscher Alarm <span id="misses" class="stat-val">0</span></div>
+            <div style="color: var(--blue);">Übersehen <span id="missed" class="stat-val">0</span></div>
         </div>
-
         <div class="btn-group no-print">
             <button id="finishBtn" class="btn-finish">Auswertung anzeigen 🏁</button>
             <button onclick="window.print()" style="background:#555">Als PDF speichern 🖨️</button>
@@ -71,82 +68,82 @@
 </div>
 
 <script>
-    let rawData = [];
+    let corrections = {};
     let gameActive = true;
+    let totalErrors = 0;
 
     document.getElementById('startBtn').addEventListener('click', function() {
-        let input = document.getElementById('jsonInput').value;
-        const start = input.indexOf('{');
-        const end = input.lastIndexOf('}');
-        if (start === -1) return alert("Kein JSON gefunden!");
-
+        const input = document.getElementById('jsonInput').value;
         try {
-            // Reinigung für sehr lange Texte
-            let jsonStr = input.substring(start, end + 1).replace(/\n/g, " ").replace(/,\s*([\]}])/g, '$1');
-            const data = JSON.parse(jsonStr);
-            rawData = data.display_words;
+            const start = input.indexOf('{');
+            const end = input.lastIndexOf('}');
+            const data = JSON.parse(input.substring(start, end + 1).replace(/\n/g, " "));
             
+            corrections = data.corrections;
+            const words = data.text.split(/\s+/);
             const container = document.getElementById('textDisplay');
             container.innerHTML = "";
             gameActive = true;
-            
-            let totalErrors = rawData.filter(w => !w.correct).length;
+
+            totalErrors = Object.keys(corrections).length;
             document.getElementById('found').parentElement.innerHTML = `Gefunden <span id="found" class="stat-val">0 / ${totalErrors}</span>`;
 
-            // Dokument-Fragment für bessere Performance bei 1000+ Wörtern
-            const fragment = document.createDocumentFragment();
-            rawData.forEach((item, idx) => {
+            words.forEach((word, idx) => {
+                const cleanWord = word.replace(/[.,!?;:]/g, "");
                 const span = document.createElement('span');
-                span.innerText = item.w + " ";
+                span.innerText = word + " ";
                 span.className = "word";
-                span.id = "w-" + idx;
-                span.onclick = () => handleWordClick(span, item);
-                fragment.appendChild(span);
+                
+                // Prüfen ob Wort (ohne Satzzeichen) in den Korrekturen ist
+                if (corrections[cleanWord]) {
+                    span.dataset.isError = "true";
+                    span.dataset.solution = corrections[cleanWord];
+                }
+
+                span.onclick = function() {
+                    if (!gameActive) return;
+                    if (this.dataset.isError === "true") {
+                        if (!this.classList.contains('is-correct')) {
+                            // Ersetze nur das Wort, behalte Satzzeichen bei
+                            const original = this.innerText;
+                            this.innerText = original.replace(cleanWord, this.dataset.solution);
+                            this.classList.add('is-correct');
+                            this.classList.remove('wrong-click');
+                            updateStats();
+                        }
+                    } else if (!this.classList.contains('wrong-click') && !this.classList.contains('is-correct')) {
+                        this.classList.add('wrong-click');
+                        updateStats();
+                    }
+                };
+                container.appendChild(span);
             });
-            container.appendChild(fragment);
 
             document.getElementById('setup').classList.add('hidden');
             document.getElementById('game').classList.remove('hidden');
-        } catch (e) { alert("JSON-Fehler! Bei sehr langen Texten hat Gemini evtl. ein Komma vergessen."); }
-    });
-
-    function handleWordClick(el, item) {
-        if (!gameActive) return;
-        if (item.correct === false) {
-            if (!el.classList.contains('is-correct')) {
-                el.innerText = item.solution + " ";
-                el.classList.add('is-correct');
-                el.classList.remove('wrong-click');
-                updateStats();
-            }
-        } else if (!el.classList.contains('is-correct') && !el.classList.contains('wrong-click')) {
-            el.classList.add('wrong-click');
-            updateStats();
+        } catch (e) {
+            alert("Fehler: Das JSON von Gemini ist unvollständig. Bitte kopiere die gesamte Antwort.");
         }
-    }
+    });
 
     function updateStats() {
         const found = document.querySelectorAll('.is-correct').length;
-        const total = rawData.filter(w => !w.correct).length;
-        document.getElementById('found').innerText = `${found} / ${total}`;
+        document.getElementById('found').innerText = `${found} / ${totalErrors}`;
         document.getElementById('misses').innerText = document.querySelectorAll('.wrong-click').length;
     }
 
     document.getElementById('finishBtn').addEventListener('click', function() {
         gameActive = false;
         let missedCount = 0;
-        rawData.forEach((item, idx) => {
-            const el = document.getElementById('w-' + idx);
-            if (item.correct === false && !el.classList.contains('is-correct')) {
+        document.querySelectorAll('.word').forEach(el => {
+            if (el.dataset.isError === "true" && !el.classList.contains('is-correct')) {
                 el.classList.add('missed-error');
                 missedCount++;
             }
         });
         document.getElementById('missed').innerText = missedCount;
         this.disabled = true;
-        this.style.opacity = "0.5";
     });
 </script>
 </body>
 </html>
-
